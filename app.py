@@ -3,15 +3,51 @@ import yfinance as yf
 import pandas as pd
 import numpy as np
 import matplotlib.pyplot as plt
+import matplotlib.font_manager as fm
+import requests
+import os
 import datetime
 from dateutil.relativedelta import relativedelta
 
 # --- 1. 頁面基本設定 ---
-st.set_page_config(page_title="TSMOM 量化操盤室 (旗艦修復版)", layout="wide")
+st.set_page_config(page_title="TSMOM 量化操盤室 (字型修復版)", layout="wide")
 
-# 設定中文字型
-plt.rcParams['axes.unicode_minus'] = False
-plt.rcParams['font.sans-serif'] = ['Microsoft JhengHei', 'SimHei', 'Arial']
+
+# ==========================================
+# 🔤 字型修復專區 (雲端亂碼救星)
+# ==========================================
+def install_chinese_font():
+    # 定義字型檔案名稱 (思源黑體)
+    font_path = "NotoSansTC-Regular.ttf"
+
+    # 如果檔案不存在，就從 Google 下載
+    if not os.path.exists(font_path):
+        url = "https://github.com/google/fonts/raw/main/ofl/notosanstc/NotoSansTC-Regular.ttf"
+        try:
+            # 顯示下載進度以免使用者以為當機
+            # with st.spinner("☁️ 正在為雲端環境下載中文字型，請稍候..."):
+            response = requests.get(url)
+            with open(font_path, "wb") as f:
+                f.write(response.content)
+        except:
+            pass  # 下載失敗則忽略，使用預設
+
+    # 將下載的字型加入 Matplotlib
+    if os.path.exists(font_path):
+        fm.fontManager.addfont(font_path)
+        # 設定 Matplotlib 使用這個字型
+        plt.rcParams['font.family'] = fm.FontProperties(fname=font_path).get_name()
+    else:
+        # 如果真的下載失敗，回退到系統預設 (雖然可能還是亂碼，但至少不報錯)
+        plt.rcParams['font.sans-serif'] = ['Microsoft JhengHei', 'SimHei', 'Arial']
+
+    # 設定負號正常顯示
+    plt.rcParams['axes.unicode_minus'] = False
+
+
+# 執行字型設定
+install_chinese_font()
+# ==========================================
 
 # --- 2. 側邊欄設定 ---
 st.sidebar.header("🎛️ 參數設定中心")
@@ -131,10 +167,9 @@ def analyze_strategy(price):
     mom_peak = r.rolling(best_win_peak).sum()
     sig_peak = np.sign(mom_peak.shift(1)).fillna(0)
 
-    # [關鍵修復] 台股防呆邏輯
+    # 台股防呆邏輯
     ticker_name = str(price.name).upper() if hasattr(price, 'name') else ""
     if ".TW" in ticker_name:
-        # 使用 np.where 後，必須立刻轉回 pd.Series，否則會變成 numpy array 導致後面 .iloc 報錯
         sig_robust = pd.Series(np.where(sig_robust < 0, 0, sig_robust), index=r.index)
         sig_peak = pd.Series(np.where(sig_peak < 0, 0, sig_peak), index=r.index)
 
