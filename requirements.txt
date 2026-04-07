@@ -4,3 +4,4 @@ pandas
 matplotlib
 python-dateutil
 streamlit-analytics
+setuptools
