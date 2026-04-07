@@ -1,4 +1,4 @@
-import streamlit as st
+import streamlit_analytics2 as streamlit_analytics
 
 # ==========================================
 # 🩹 [修復補丁] 消除黃色警告框專區
