@@ -3,5 +3,5 @@ yfinance
 pandas
 matplotlib
 python-dateutil
-streamlit-analytics
+streamlit-analytics2  <-- 關鍵：改成加上 2
 setuptools
